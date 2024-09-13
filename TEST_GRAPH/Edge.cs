@@ -15,9 +15,10 @@ namespace TEST_GRAPH
             Weight = weight;
         }
 
-        public void Draw(Graphics g)
+        public void Draw(Graphics g, Color? color = null)
         {
-            Pen pen = new Pen(Color.Black, 2);
+            Color fillColor = color ?? Color.Black;
+            Pen pen = new Pen(fillColor, 2);
             AdjustableArrowCap bigArrow = new AdjustableArrowCap(5, 5);
             pen.CustomEndCap = bigArrow;
 

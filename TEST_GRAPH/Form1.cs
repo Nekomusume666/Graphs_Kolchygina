@@ -14,7 +14,9 @@ namespace TEST_GRAPH
         private Vertex selectedVertex = null;
         private bool firstClick = true;
         private int vertexCounter = 1; 
-        private Vertex previousSelectedVertex = null; 
+        private Vertex previousSelectedVertex = null;
+        private List<Edge> highlightedEdges = new List<Edge>();
+
 
         public Form1()
         {
@@ -28,46 +30,36 @@ namespace TEST_GRAPH
             InitContextMenu();
         }
 
-        // Обработчик изменения значений в таблице (матрице смежности)
         private void DgvIncidenceMatrix_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            // Проверяем, что изменение произошло не в заголовках, а в ячейках с данными
             if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
 
-            // Получаем идентификаторы вершин (строки и столбца)
             string rowVertexId = dgvIncidenceMatrix.Rows[e.RowIndex].HeaderCell.Value.ToString();
             string colVertexId = dgvIncidenceMatrix.Columns[e.ColumnIndex].HeaderText;
 
-            // Пробуем получить новое значение из ячейки
             if (int.TryParse(dgvIncidenceMatrix.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString(), out int newWeight))
             {
-                // Ищем вершины по идентификаторам
                 var vertexRow = vertices.FirstOrDefault(v => v.Id == rowVertexId);
                 var vertexCol = vertices.FirstOrDefault(v => v.Id == colVertexId);
 
                 if (vertexRow == null || vertexCol == null) return;
 
-                // Проверяем, есть ли уже существующая дуга от vertexRow к vertexCol
-                var edge = edges.FirstOrDefault(ed => ed.Start == vertexRow && ed.End == vertexCol);
+                var edge = edges.FirstOrDefault(ed => (ed.Start == vertexRow && ed.End == vertexCol) || (ed.End == vertexRow && ed.Start == vertexCol));
                 var reverseEdge = edges.FirstOrDefault(ed => ed.Start == vertexCol && ed.End == vertexRow);
 
                 if (newWeight != 0)
                 {
                     if (edge != null)
                     {
-                        // Если дуга существует, обновляем её вес
                         edge.Weight = newWeight;
                     }
                     else
                     {
-                        // Если дуги нет, добавляем новую дугу
                         edges.Add(new Edge(vertexRow, vertexCol, newWeight));
                     }
 
-                    // Обновляем значение в противоположной ячейке для симметрии
                     dgvIncidenceMatrix.Rows[e.ColumnIndex].Cells[e.RowIndex].Value = newWeight;
 
-                    // Если есть обратная дуга, тоже обновляем её вес
                     if (reverseEdge != null)
                     {
                         reverseEdge.Weight = newWeight;
@@ -75,23 +67,19 @@ namespace TEST_GRAPH
                 }
                 else
                 {
-                    // Если значение 0, удаляем существующую дугу (если она есть)
                     if (edge != null)
                     {
                         edges.Remove(edge);
                     }
 
-                    // Если есть обратная дуга, удаляем её тоже
                     if (reverseEdge != null)
                     {
                         edges.Remove(reverseEdge);
                     }
 
-                    // Обновляем противоположную ячейку
                     dgvIncidenceMatrix.Rows[e.ColumnIndex].Cells[e.RowIndex].Value = 0;
                 }
 
-                // Обновляем отображение графа
                 panelGraph.Invalidate();
             }
         }
@@ -103,13 +91,11 @@ namespace TEST_GRAPH
             dgvIncidenceMatrix.Rows.Clear();
             dgvIncidenceMatrix.Columns.Clear();
 
-            // Добавляем столбцы для каждой вершины
             foreach (var vertex in vertices)
             {
                 dgvIncidenceMatrix.Columns.Add(vertex.Id, vertex.Id);
             }
 
-            // Добавляем строки для каждой вершины
             foreach (var vertexRow in vertices)
             {
                 var row = new DataGridViewRow();
@@ -117,10 +103,8 @@ namespace TEST_GRAPH
 
                 foreach (var vertexCol in vertices)
                 {
-                    // Ищем дугу между вершинами
-                    var edge = edges.FirstOrDefault(e => e.Start == vertexRow && e.End == vertexCol);
+                    var edge = edges.FirstOrDefault(ed => (ed.Start == vertexRow && ed.End == vertexCol) || (ed.End == vertexRow && ed.Start == vertexCol));
 
-                    // Если дуга существует, добавляем её вес, иначе 0
                     int cellValue = edge != null ? edge.Weight : 0;
 
                     var cell = new DataGridViewTextBoxCell { Value = cellValue };
@@ -130,10 +114,8 @@ namespace TEST_GRAPH
                 dgvIncidenceMatrix.Rows.Add(row);
             }
 
-            // Установка заголовков строк
             dgvIncidenceMatrix.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders;
 
-            // Добавляем обработчик события для изменения значений в таблице
             dgvIncidenceMatrix.CellValueChanged += DgvIncidenceMatrix_CellValueChanged;
         }
 
@@ -171,7 +153,7 @@ namespace TEST_GRAPH
             UpdateIncidenceMatrix();
         }
 
-        // Поиск самого короткого пути
+        // Пример вызова метода сброса в контекстном меню
         private void FindShortestPath()
         {
             if (previousSelectedVertex == null || selectedVertex == null)
@@ -189,9 +171,26 @@ namespace TEST_GRAPH
             {
                 string pathStr = string.Join(" -> ", path.Select(v => v.Id));
                 MessageBox.Show($"Кратчайший путь: {pathStr}\nДлина пути: {distance}");
+
+                highlightedEdges.Clear(); 
+                for (int i = 0; i < path.Count - 1; i++)
+                {
+                    var startVertex = path[i];
+                    var endVertex = path[i + 1];
+
+                    var edge = edges.FirstOrDefault(e => e.Start == startVertex && e.End == endVertex);
+                    if (edge != null)
+                    {
+                        highlightedEdges.Add(edge);
+                    }
+                }
+
+                panelGraph.Invalidate(); 
             }
+
             ResetSelectedVertices();
         }
+
 
 
         // Алгоритм Дейкстры
@@ -300,55 +299,41 @@ namespace TEST_GRAPH
 
         private void AddEdge()
         {
-            // Проверяем, выбраны ли начальная и конечная вершины
             if (previousSelectedVertex == null || selectedVertex == null)
             {
                 MessageBox.Show("Пожалуйста, выберите начальную и конечную вершины.");
                 return;
             }
 
-            // Ожидаем ввод веса дуги
-            string input = Interaction.InputBox("Введите вес дуги", "Вес дуги", "1");
+            string input = Interaction.InputBox("Введите вес ребра", "Вес ребра", "1");
 
             if (int.TryParse(input, out int weight))
             {
-                // Проверяем, существует ли уже дуга между этими вершинами
-                var existingEdge = edges.FirstOrDefault(edge => edge.Start == previousSelectedVertex && edge.End == selectedVertex);
-                var reverseEdge = edges.FirstOrDefault(edge => edge.Start == selectedVertex && edge.End == previousSelectedVertex);
+                var existingEdge = edges.FirstOrDefault(edge => 
+                    (edge.Start == previousSelectedVertex && edge.End == selectedVertex) ||
+                    (edge.Start == selectedVertex && edge.End == previousSelectedVertex));
 
                 if (existingEdge == null)
                 {
-                    // Если дуги нет, добавляем новую дугу
                     edges.Add(new Edge(previousSelectedVertex, selectedVertex, weight));
-                    dgvIncidenceMatrix.Rows[vertices.IndexOf(previousSelectedVertex)].Cells[vertices.IndexOf(selectedVertex)].Value = weight;
                 }
                 else
                 {
-                    // Если дуга уже существует, обновляем её вес
                     existingEdge.Weight = weight;
-                    dgvIncidenceMatrix.Rows[vertices.IndexOf(previousSelectedVertex)].Cells[vertices.IndexOf(selectedVertex)].Value = weight;
                 }
 
-                if (reverseEdge == null)
-                {
-                    // Добавляем обратную дугу (если её нет)
-                    edges.Add(new Edge(selectedVertex, previousSelectedVertex, weight));
-                    dgvIncidenceMatrix.Rows[vertices.IndexOf(selectedVertex)].Cells[vertices.IndexOf(previousSelectedVertex)].Value = weight;
-                }
-                else
-                {
-                    // Обновляем вес обратной дуги
-                    reverseEdge.Weight = weight;
-                    dgvIncidenceMatrix.Rows[vertices.IndexOf(selectedVertex)].Cells[vertices.IndexOf(previousSelectedVertex)].Value = weight;
-                }
+                dgvIncidenceMatrix.Rows[vertices.IndexOf(previousSelectedVertex)].Cells[vertices.IndexOf(selectedVertex)].Value = weight;
+                dgvIncidenceMatrix.Rows[vertices.IndexOf(selectedVertex)].Cells[vertices.IndexOf(previousSelectedVertex)].Value = weight;
+
                 ResetSelectedVertices();
                 panelGraph.Invalidate();
             }
             else
             {
-                MessageBox.Show("Некорректный ввод веса дуги. Пожалуйста, введите целое число.");
+                MessageBox.Show("Некорректный ввод веса ребра. Пожалуйста, введите целое число.");
             }
         }
+
 
 
 
@@ -359,27 +344,32 @@ namespace TEST_GRAPH
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
-            // Отрисовка всех дуг
             foreach (var edge in edges)
             {
-                edge.Draw(g);
+                if (highlightedEdges.Contains(edge))
+                {
+                    edge.Draw(g, Color.Red);
+                }
+                else
+                {
+                    edge.Draw(g);
+                }
             }
 
-            // Отрисовка всех вершин
             foreach (var vertex in vertices)
             {
                 if (vertex == previousSelectedVertex) 
                 {
-                    vertex.Draw(g, Color.Green); 
+                    vertex.Draw(g, Color.Green);
                 }
-                else if (vertex == selectedVertex) 
+                else if (vertex == selectedVertex)
                 {
                     vertex.Draw(g, Color.Red); 
                 }
                 else 
                 {
                     vertex.Draw(g);
-                }  
+                }
                 g.DrawString(vertex.Id, SystemFonts.DefaultFont, Brushes.Black, vertex.Position.X - 10, vertex.Position.Y - 10);
             }
         }
@@ -393,10 +383,8 @@ namespace TEST_GRAPH
                 return;
             }
 
-            // Удаляем все дуги, связанные с выбранной вершиной
             edges.RemoveAll(edge => edge.Start == selectedVertex || edge.End == selectedVertex);
 
-            // Удаляем саму вершину
             vertices.Remove(selectedVertex);
 
             ResetSelectedVertices();
@@ -438,12 +426,10 @@ namespace TEST_GRAPH
                 return;
             }
 
-            // Находим дугу между выбранными вершинами
-            var edgeToChange = edges.FirstOrDefault(edge => edge.Start == previousSelectedVertex && edge.End == selectedVertex);
+            var edgeToChange = edges.FirstOrDefault(edge => (edge.Start == previousSelectedVertex && edge.End == selectedVertex) || (edge.End == previousSelectedVertex && edge.Start == selectedVertex));
 
             if (edgeToChange != null)
             {
-                // Ожидаем новый вес дуги
                 string input = Interaction.InputBox("Введите новый вес дуги", "Изменение веса дуги", edgeToChange.Weight.ToString());
 
                 if (int.TryParse(input, out int newWeight))
