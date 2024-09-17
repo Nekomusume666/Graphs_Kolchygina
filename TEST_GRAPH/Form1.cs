@@ -117,9 +117,13 @@ namespace TEST_GRAPH
             contextMenu.Items.Add("Добавить дугу", null, (s, e) => AddEdge());
             contextMenu.Items.Add("Изменить вес дуги", null, (s, e) => ChangeEdgeWeight());
             contextMenu.Items.Add("Удалить дугу", null, (s, e) => RemoveEdge());
-            contextMenu.Items.Add("Найти кратчайший путь", null, (s, e) => FindShortestPath());
+            contextMenu.Items.Add("Найти кратчайший путь (Дейкстра)", null, (s, e) => FindShortestPath());
+            contextMenu.Items.Add("Найти кратчайший путь (Флойд)", null, (s, e) => FindShortestPathFloyd());
+            contextMenu.Items.Add("Сравнить время выполнения (Дейкстра и Флойд)", null, (s, e) => CompareAlgorithms());
+
             panelGraph.ContextMenuStrip = contextMenu;
         }
+
 
         // Добавление вершины
         private void AddVertex(Point position)
@@ -140,6 +144,181 @@ namespace TEST_GRAPH
             UpdateIncidenceMatrix();
         }
 
+        private void FindShortestPathFloyd()
+        {
+            if (previousSelectedVertex == null || selectedVertex == null)
+            {
+                MessageBox.Show("Не выбраны начальная и конечная вершины!");
+                return;
+            }
+
+            int n = vertices.Count;
+            int[,] graph = new int[n, n];
+            int[,] distances;
+            int[,] predecessors;
+
+            // Инициализация матрицы весов графа
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    graph[i, j] = int.MaxValue;
+                    if (i == j)
+                    {
+                        graph[i, j] = 0;
+                    }
+                }
+            }
+
+            foreach (var edge in edges)
+            {
+                int startIndex = vertices.IndexOf(edge.Start);
+                int endIndex = vertices.IndexOf(edge.End);
+                graph[startIndex, endIndex] = edge.Weight;
+            }
+
+            var startTime = DateTime.Now;
+            FloydWarshall.ComputeShortestPaths(graph, out distances, out predecessors);
+            var endTime = DateTime.Now;
+
+            int startIdx = vertices.IndexOf(previousSelectedVertex);
+            int endIdx = vertices.IndexOf(selectedVertex);
+
+            if (distances[startIdx, endIdx] != int.MaxValue)
+            {
+                string pathStr = "";
+                var path = new List<Vertex>();
+                PrintPath(predecessors, startIdx, endIdx, ref pathStr, path);
+
+                // Обновляем список highlightedEdges
+                highlightedEdges.Clear();
+                for (int i = 0; i < path.Count - 1; i++)
+                {
+                    var startVertex = path[i];
+                    var endVertex = path[i + 1];
+
+                    var edge = edges.FirstOrDefault(e => e.Start == startVertex && e.End == endVertex);
+                    if (edge != null)
+                    {
+                        highlightedEdges.Add(edge);
+                    }
+                }
+
+                MessageBox.Show($"Кратчайший путь (Флойд) от {previousSelectedVertex.Id} до {selectedVertex.Id}: {pathStr}\nДлина пути: {distances[startIdx, endIdx]}\nВремя выполнения: {endTime - startTime}");
+            }
+            else
+            {
+                MessageBox.Show("Пути не существует.");
+            }
+
+            panelGraph.Invalidate(); // Перерисовываем граф с выделенными путями
+            ResetSelectedVertices();
+        }
+
+
+        private void CompareAlgorithms()
+        {
+            if (previousSelectedVertex == null || selectedVertex == null)
+            {
+                MessageBox.Show("Не выбраны начальная и конечная вершины!");
+                return;
+            }
+
+            // Дейкстра
+            var startTimeDijkstra = DateTime.Now;
+            var (distanceDijkstra, pathDijkstra) = Dijkstra(previousSelectedVertex, selectedVertex);
+            var endTimeDijkstra = DateTime.Now;
+
+            var pathStrDijkstra = string.Join(" -> ", pathDijkstra.Select(v => v.Id));
+
+            // Флойд
+            int n = vertices.Count;
+            int[,] graph = new int[n, n];
+            int[,] distances;
+            int[,] predecessors;
+
+            // Инициализация матрицы весов графа
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    graph[i, j] = int.MaxValue;
+                    if (i == j)
+                    {
+                        graph[i, j] = 0;
+                    }
+                }
+            }
+
+            foreach (var edge in edges)
+            {
+                int startIndex = vertices.IndexOf(edge.Start);
+                int endIndex = vertices.IndexOf(edge.End);
+                graph[startIndex, endIndex] = edge.Weight;
+            }
+
+            var startTimeFloyd = DateTime.Now;
+            FloydWarshall.ComputeShortestPaths(graph, out distances, out predecessors);
+            var endTimeFloyd = DateTime.Now;
+
+            int startIdx = vertices.IndexOf(previousSelectedVertex);
+            int endIdx = vertices.IndexOf(selectedVertex);
+
+            string pathStrFloyd = "";
+            var pathFloyd = new List<Vertex>();
+            if (distances[startIdx, endIdx] != int.MaxValue)
+            {
+                PrintPath(predecessors, startIdx, endIdx, ref pathStrFloyd, pathFloyd);
+
+                // Обновляем список highlightedEdges
+                highlightedEdges.Clear();
+                for (int i = 0; i < pathFloyd.Count - 1; i++)
+                {
+                    var startVertex = pathFloyd[i];
+                    var endVertex = pathFloyd[i + 1];
+
+                    var edge = edges.FirstOrDefault(e => e.Start == startVertex && e.End == endVertex);
+                    if (edge != null)
+                    {
+                        highlightedEdges.Add(edge);
+                    }
+                }
+            }
+
+            var message = $"Метод Дейкстры:\nКратчайший путь: {pathStrDijkstra}\nДлина пути: {distanceDijkstra}\nВремя выполнения: {endTimeDijkstra - startTimeDijkstra}\n\n" +
+                          $"Метод Флойда:\nКратчайший путь: {pathStrFloyd}\nДлина пути: {distances[startIdx, endIdx]}\nВремя выполнения: {endTimeFloyd - startTimeFloyd}";
+
+            MessageBox.Show(message);
+
+            panelGraph.Invalidate(); // Перерисовываем граф с выделенными путями
+            ResetSelectedVertices();
+        }
+
+
+        private void PrintPath(int[,] predecessors, int start, int end, ref string pathStr, List<Vertex> path)
+        {
+            if (start == end)
+            {
+                path.Add(vertices[start]);
+                pathStr = vertices[start].Id;
+            }
+            else if (predecessors[start, end] == -1)
+            {
+                path.Add(vertices[start]);
+                path.Add(vertices[end]);
+                pathStr = vertices[start].Id + " -> " + vertices[end].Id;
+            }
+            else
+            {
+                PrintPath(predecessors, start, predecessors[start, end], ref pathStr, path);
+                pathStr += " -> " + vertices[end].Id;
+                path.Add(vertices[end]);
+            }
+        }
+
+
+
+
         // Пример вызова метода сброса в контекстном меню
         private void FindShortestPath()
         {
@@ -149,7 +328,10 @@ namespace TEST_GRAPH
                 return;
             }
 
+            var startTime = DateTime.Now;
             var (distance, path) = Dijkstra(previousSelectedVertex, selectedVertex);
+            var endTime = DateTime.Now;
+            
             if (distance == int.MaxValue)
             {
                 MessageBox.Show("Пути не существует.");
@@ -157,7 +339,8 @@ namespace TEST_GRAPH
             else
             {
                 string pathStr = string.Join(" -> ", path.Select(v => v.Id));
-                MessageBox.Show($"Кратчайший путь: {pathStr}\nДлина пути: {distance}");
+                MessageBox.Show($"Кратчайший путь (Дейкстры) от {previousSelectedVertex.Id} до {selectedVertex.Id}: {pathStr}" +
+                    $"\nДлина пути: {distance}\nВремя выполнения: {endTime - startTime}");
 
                 highlightedEdges.Clear(); 
                 for (int i = 0; i < path.Count - 1; i++)
@@ -240,7 +423,11 @@ namespace TEST_GRAPH
         // Обработка события нажатия мыши на графе
         private void PanelGraph_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right) return;
+            if (e.Button == MouseButtons.Right)
+            {
+                highlightedEdges.Clear();
+                return;
+            } 
 
             foreach (var vertex in vertices)
             {
@@ -323,12 +510,6 @@ namespace TEST_GRAPH
             }
         }
 
-
-
-
-
-
-
         // Метод для отрисовки графа
         private void PanelGraph_Paint(object sender, PaintEventArgs e)
         {
@@ -364,6 +545,7 @@ namespace TEST_GRAPH
                 g.DrawString(vertex.Id, SystemFonts.DefaultFont, Brushes.Black, vertex.Position.X - 10, vertex.Position.Y - 10);
             }
         }
+
 
 
         // Удаление выбранной вершины
