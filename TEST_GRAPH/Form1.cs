@@ -44,8 +44,7 @@ namespace TEST_GRAPH
 
                 if (vertexRow == null || vertexCol == null) return;
 
-                var edge = edges.FirstOrDefault(ed => (ed.Start == vertexRow && ed.End == vertexCol) || (ed.End == vertexRow && ed.Start == vertexCol));
-                var reverseEdge = edges.FirstOrDefault(ed => ed.Start == vertexCol && ed.End == vertexRow);
+                var edge = edges.FirstOrDefault(ed => ed.Start == vertexRow && ed.End == vertexCol);
 
                 if (newWeight != 0)
                 {
@@ -58,12 +57,8 @@ namespace TEST_GRAPH
                         edges.Add(new Edge(vertexRow, vertexCol, newWeight));
                     }
 
-                    dgvIncidenceMatrix.Rows[e.ColumnIndex].Cells[e.RowIndex].Value = newWeight;
+                    //dgvIncidenceMatrix.Rows[e.ColumnIndex].Cells[e.RowIndex].Value = newWeight;
 
-                    if (reverseEdge != null)
-                    {
-                        reverseEdge.Weight = newWeight;
-                    }
                 }
                 else
                 {
@@ -72,12 +67,7 @@ namespace TEST_GRAPH
                         edges.Remove(edge);
                     }
 
-                    if (reverseEdge != null)
-                    {
-                        edges.Remove(reverseEdge);
-                    }
-
-                    dgvIncidenceMatrix.Rows[e.ColumnIndex].Cells[e.RowIndex].Value = 0;
+                    //dgvIncidenceMatrix.Rows[e.ColumnIndex].Cells[e.RowIndex].Value = 0;
                 }
 
                 panelGraph.Invalidate();
@@ -103,8 +93,7 @@ namespace TEST_GRAPH
 
                 foreach (var vertexCol in vertices)
                 {
-                    var edge = edges.FirstOrDefault(ed => (ed.Start == vertexRow && ed.End == vertexCol) || (ed.End == vertexRow && ed.Start == vertexCol));
-
+                    var edge = edges.FirstOrDefault(ed => ed.Start == vertexRow && ed.End == vertexCol);
                     int cellValue = edge != null ? edge.Weight : 0;
 
                     var cell = new DataGridViewTextBoxCell { Value = cellValue };
@@ -118,8 +107,6 @@ namespace TEST_GRAPH
 
             dgvIncidenceMatrix.CellValueChanged += DgvIncidenceMatrix_CellValueChanged;
         }
-
-
 
         // Инициализация контекстного меню
         private void InitContextMenu()
@@ -190,8 +177,6 @@ namespace TEST_GRAPH
 
             ResetSelectedVertices();
         }
-
-
 
         // Алгоритм Дейкстры
         private (int, List<Vertex>) Dijkstra(Vertex start, Vertex end)
@@ -299,40 +284,46 @@ namespace TEST_GRAPH
 
         private void AddEdge()
         {
+            // Проверяем, выбраны ли начальная и конечная вершины
             if (previousSelectedVertex == null || selectedVertex == null)
             {
                 MessageBox.Show("Пожалуйста, выберите начальную и конечную вершины.");
                 return;
             }
 
-            string input = Interaction.InputBox("Введите вес ребра", "Вес ребра", "1");
+            // Ожидаем ввод веса дуги
+            string input = Interaction.InputBox("Введите вес дуги", "Вес дуги", "1");
 
             if (int.TryParse(input, out int weight))
             {
-                var existingEdge = edges.FirstOrDefault(edge => 
-                    (edge.Start == previousSelectedVertex && edge.End == selectedVertex) ||
-                    (edge.Start == selectedVertex && edge.End == previousSelectedVertex));
+                // Проверяем, существует ли дуга от предыдущей к выбранной вершине
+                var existingEdge = edges.FirstOrDefault(edge => edge.Start == previousSelectedVertex && edge.End == selectedVertex);
 
                 if (existingEdge == null)
                 {
+                    // Если дуги нет, добавляем новую дугу
                     edges.Add(new Edge(previousSelectedVertex, selectedVertex, weight));
                 }
                 else
                 {
+                    // Если дуга уже существует, обновляем её вес
                     existingEdge.Weight = weight;
                 }
 
+                // Обновляем значение в таблице смежности для направления previousSelectedVertex -> selectedVertex
                 dgvIncidenceMatrix.Rows[vertices.IndexOf(previousSelectedVertex)].Cells[vertices.IndexOf(selectedVertex)].Value = weight;
-                dgvIncidenceMatrix.Rows[vertices.IndexOf(selectedVertex)].Cells[vertices.IndexOf(previousSelectedVertex)].Value = weight;
 
+                // Перерисовываем граф
                 ResetSelectedVertices();
                 panelGraph.Invalidate();
             }
             else
             {
-                MessageBox.Show("Некорректный ввод веса ребра. Пожалуйста, введите целое число.");
+                MessageBox.Show("Некорректный ввод веса дуги. Пожалуйста, введите целое число.");
             }
         }
+
+
 
 
 
@@ -348,31 +339,32 @@ namespace TEST_GRAPH
             {
                 if (highlightedEdges.Contains(edge))
                 {
-                    edge.Draw(g, Color.Red);
+                    edge.Draw(g, edges, edge.Weight, Color.Red);
                 }
                 else
                 {
-                    edge.Draw(g);
+                    edge.Draw(g, edges, edge.Weight);
                 }
             }
 
             foreach (var vertex in vertices)
             {
-                if (vertex == previousSelectedVertex) 
+                if (vertex == previousSelectedVertex)
                 {
                     vertex.Draw(g, Color.Green);
                 }
                 else if (vertex == selectedVertex)
                 {
-                    vertex.Draw(g, Color.Red); 
+                    vertex.Draw(g, Color.Red);
                 }
-                else 
+                else
                 {
                     vertex.Draw(g);
                 }
                 g.DrawString(vertex.Id, SystemFonts.DefaultFont, Brushes.Black, vertex.Position.X - 10, vertex.Position.Y - 10);
             }
         }
+
 
         // Удаление выбранной вершины
         private void RemoveVertex()
@@ -389,7 +381,6 @@ namespace TEST_GRAPH
 
             ResetSelectedVertices();
             UpdateIncidenceMatrix();
-
         }
 
         // Удаление дуги между выбранными вершинами
@@ -408,14 +399,15 @@ namespace TEST_GRAPH
                 edges.Remove(edgeToRemove);
                 MessageBox.Show("Дуга удалена.");
                 UpdateIncidenceMatrix();
-
             }
             else
             {
                 MessageBox.Show("Дуга между этими вершинами не найдена.");
             }
+
             ResetSelectedVertices();
         }
+
 
         // Изменение веса дуги
         private void ChangeEdgeWeight()
@@ -426,7 +418,7 @@ namespace TEST_GRAPH
                 return;
             }
 
-            var edgeToChange = edges.FirstOrDefault(edge => (edge.Start == previousSelectedVertex && edge.End == selectedVertex) || (edge.End == previousSelectedVertex && edge.Start == selectedVertex));
+            var edgeToChange = edges.FirstOrDefault(edge => edge.Start == previousSelectedVertex && edge.End == selectedVertex);
 
             if (edgeToChange != null)
             {
@@ -437,7 +429,6 @@ namespace TEST_GRAPH
                     edgeToChange.Weight = newWeight;
                     MessageBox.Show("Вес дуги изменен.");
                     UpdateIncidenceMatrix();
-
                 }
                 else
                 {
@@ -451,6 +442,7 @@ namespace TEST_GRAPH
 
             ResetSelectedVertices();
         }
+
 
     }
 }

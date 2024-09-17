@@ -1,4 +1,5 @@
 ﻿using System.Drawing.Drawing2D;
+using System.Windows.Forms.VisualStyles;
 
 namespace TEST_GRAPH
 {
@@ -15,17 +16,185 @@ namespace TEST_GRAPH
             Weight = weight;
         }
 
-        public void Draw(Graphics g, Color? color = null)
+        public bool IsReverseOf(Edge other)
         {
-            Color fillColor = color ?? Color.Black;
-            Pen pen = new Pen(fillColor, 2);
-            AdjustableArrowCap bigArrow = new AdjustableArrowCap(5, 5);
-            pen.CustomEndCap = bigArrow;
-
-            g.DrawLine(pen, Start.Position, End.Position);
-
-            Point weightPosition = new Point((Start.Position.X + End.Position.X) / 2, (Start.Position.Y + End.Position.Y) / 2);
-            g.DrawString(Weight.ToString(), SystemFonts.DefaultFont, Brushes.Black, weightPosition);
+            return this.Start == other.End && this.End == other.Start;
         }
+
+        public void Draw(Graphics g, List<Edge> edges, int weight, Color? color = null)
+        {
+            Pen pen = new Pen(color ?? Color.Black, 2);
+
+            // Определяем, является ли дуга обратной
+            Edge reverseEdge = edges.FirstOrDefault(e => e.IsReverseOf(this));
+            if (reverseEdge != null)
+            {
+                // Если дуга обратная, рисуем кривую
+                DrawCurvedArrow(g, pen, Start.Position, End.Position, weight);
+            }
+            else
+            {
+                // Иначе рисуем прямую линию
+                DrawArrow(g, pen, Start.Position, End.Position, weight);
+            }
+
+            // Отображаем вес дуги в центре
+            //DrawWeight(g, Start.Position, End.Position, Weight);
+
+            pen.Dispose();
+        }
+
+        private void DrawArrow(Graphics g, Pen pen, PointF start, PointF end, int weight)
+        {
+            float vertexRadius = 20;  // Радиус вершины
+            float offset = 10;  // Смещение веса от линии
+
+            // Рассчитываем направление от start к end
+            float dx = end.X - start.X;
+            float dy = end.Y - start.Y;
+            float distance = (float)Math.Sqrt(dx * dx + dy * dy);
+
+            if (distance > 0)
+            {
+                dx /= distance;
+                dy /= distance;
+
+                // Корректируем точки начала и конца стрелки с учетом радиусов вершин
+                PointF adjustedStart = new PointF(start.X + dx * vertexRadius, start.Y + dy * vertexRadius);
+                PointF adjustedEnd = new PointF(end.X - dx * vertexRadius, end.Y - dy * vertexRadius);
+
+                // Рисуем линию между скорректированными точками
+                g.DrawLine(pen, adjustedStart, adjustedEnd);
+
+                // Рисуем наконечник стрелки
+                DrawArrowHead(g, pen, adjustedStart, adjustedEnd);
+
+                // Отображаем вес дуги на средней точке, смещая его от линии
+                PointF middlePoint = GetMiddlePoint(adjustedStart, adjustedEnd);
+                PointF weightPosition = new PointF(middlePoint.X, middlePoint.Y - offset); // Смещаем вес вверх на offset
+
+                // Создаем белый фон для текста
+                string weightText = weight.ToString();
+                Font font = SystemFonts.DefaultFont;
+                SizeF textSize = g.MeasureString(weightText, font);
+
+                // Определяем позицию и размер фона
+                RectangleF textBackground = new RectangleF(
+                    weightPosition.X - textSize.Width / 2,
+                    weightPosition.Y - textSize.Height / 2,
+                    textSize.Width,
+                    textSize.Height
+                );
+
+                // Рисуем белый прямоугольник под текст
+                g.FillRectangle(Brushes.White, textBackground);
+
+                // Рисуем текст поверх белого фона
+                g.DrawString(weightText, font, Brushes.Black, weightPosition.X - textSize.Width / 2, weightPosition.Y - textSize.Height / 2);
+            }
+        }
+
+
+
+
+
+        private void DrawCurvedArrow(Graphics g, Pen pen, PointF start, PointF end, int weight)
+        {
+            float vertexRadius = 20;  // Радиус вершины
+            float offset = 15;  // Смещение веса от кривой
+
+            // Вычисляем направление и расстояние
+            float dx = end.X - start.X;
+            float dy = end.Y - start.Y;
+            float distance = (float)Math.Sqrt(dx * dx + dy * dy);
+
+            if (distance > 0)
+            {
+                dx /= distance;
+                dy /= distance;
+
+                // Корректируем точки начала и конца стрелки с учетом радиусов вершин
+                PointF adjustedStart = new PointF(start.X + dx * vertexRadius, start.Y + dy * vertexRadius);
+                PointF adjustedEnd = new PointF(end.X - dx * vertexRadius, end.Y - dy * vertexRadius);
+
+                // Вычисляем контрольную точку для кривой
+                PointF controlPoint = GetControlPoint(adjustedStart, adjustedEnd);
+
+                GraphicsPath path = new GraphicsPath();
+                path.AddBezier(adjustedStart, controlPoint, controlPoint, adjustedEnd);
+                g.DrawPath(pen, path);
+
+                // Рисуем наконечник стрелки
+                DrawArrowHead(g, pen, controlPoint, adjustedEnd);
+
+                // Отображаем вес дуги, смещая его от кривой
+                PointF weightPosition = new PointF(controlPoint.X, controlPoint.Y - offset); // Смещаем вес вверх на offset
+
+                // Создаем белый фон для текста
+                string weightText = weight.ToString();
+                Font font = SystemFonts.DefaultFont;
+                SizeF textSize = g.MeasureString(weightText, font);
+
+                // Определяем позицию и размер фона
+                RectangleF textBackground = new RectangleF(
+                    weightPosition.X - textSize.Width / 2,
+                    weightPosition.Y - textSize.Height / 2,
+                    textSize.Width,
+                    textSize.Height
+                );
+
+                // Рисуем белый прямоугольник под текст
+                g.FillRectangle(Brushes.White, textBackground);
+
+                // Рисуем текст поверх белого фона
+                g.DrawString(weightText, font, Brushes.Black, weightPosition.X - textSize.Width / 2, weightPosition.Y - textSize.Height / 2);
+            }
+        }
+
+
+
+
+        private void DrawArrowHead(Graphics g, Pen pen, PointF start, PointF end)
+        {
+            const float headSize = 10; // Статичный размер наконечника стрелки
+            float angle = (float)Math.Atan2(end.Y - start.Y, end.X - start.X); // Угол направления стрелки
+
+            // Точки, определяющие треугольник стрелки
+            PointF arrowPoint1 = new PointF(
+                end.X - headSize * (float)Math.Cos(angle - Math.PI / 6),
+                end.Y - headSize * (float)Math.Sin(angle - Math.PI / 6));
+
+            PointF arrowPoint2 = new PointF(
+                end.X - headSize * (float)Math.Cos(angle + Math.PI / 6),
+                end.Y - headSize * (float)Math.Sin(angle + Math.PI / 6));
+
+            // Рисуем две линии от конца до точек наконечника
+            g.DrawLine(pen, end, arrowPoint1);
+            g.DrawLine(pen, end, arrowPoint2);
+        }
+
+
+
+        private PointF GetControlPoint(PointF start, PointF end)
+        {
+            // Определение контрольной точки для кривой (в данном примере это простое смещение по нормали)
+            float dx = end.X - start.X;
+            float dy = end.Y - start.Y;
+            float length = (float)Math.Sqrt(dx * dx + dy * dy);
+            float offset = 20; // Величина искривления
+
+            // Нормаль к вектору (dx, dy)
+            float nx = -dy / length;
+            float ny = dx / length;
+
+            // Смещаем центр дуги по нормали на offset
+            return new PointF((start.X + end.X) / 2 + nx * offset, (start.Y + end.Y) / 2 + ny * offset);
+        }
+
+        private PointF GetMiddlePoint(PointF start, PointF end)
+        {
+            return new PointF((start.X + end.X) / 2, (start.Y + end.Y) / 2);
+        }
+
     }
 }
