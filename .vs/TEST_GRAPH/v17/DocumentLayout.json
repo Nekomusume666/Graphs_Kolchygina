@@ -7,10 +7,6 @@
       "RelativeMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|solutionrelative:test_graph\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|c:\\users\\admin\\source\\repos\\test_graph\\graphs_kolchygina\\test_graph\\floydwarshall.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|solutionrelative:test_graph\\floydwarshall.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\test_graph\\edge.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|solutionrelative:test_graph\\edge.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -19,16 +15,12 @@
       "RelativeMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|solutionrelative:test_graph\\vertex.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\test_graph\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|solutionrelative:test_graph\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|c:\\users\\admin\\source\\repos\\test_graph\\graphs_kolchygina\\test_graph\\floydwarshall.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|solutionrelative:test_graph\\floydwarshall.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\test_graph\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|solutionrelative:test_graph\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\test_graph\\form1.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{641D6C61-16F0-4136-B0D4-87A7603AC2C6}|TEST_GRAPH\\TEST_GRAPH.csproj|solutionrelative:test_graph\\form1.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -38,7 +30,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 10,
+          "SelectedChildIndex": 8,
           "Children": [
             {
               "$type": "Bookmark",
@@ -58,44 +50,33 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "FloydWarshall.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\FloydWarshall.cs",
               "RelativeDocumentMoniker": "TEST_GRAPH\\FloydWarshall.cs",
               "ToolTip": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\FloydWarshall.cs",
               "RelativeToolTip": "TEST_GRAPH\\FloydWarshall.cs",
-              "ViewState": "AQIAAB8AAAAAAAAAAAAQwD8AAAAAAAAA",
+              "ViewState": "AQIAACsAAAAAAAAAAAAQwD8AAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-09-17T19:57:02.605Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "Form1.Designer.cs",
-              "DocumentMoniker": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\Form1.Designer.cs",
-              "RelativeDocumentMoniker": "TEST_GRAPH\\Form1.Designer.cs",
-              "ToolTip": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\Form1.Designer.cs",
-              "RelativeToolTip": "TEST_GRAPH\\Form1.Designer.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-09-12T16:25:45.995Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "Vertex.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\Vertex.cs",
               "RelativeDocumentMoniker": "TEST_GRAPH\\Vertex.cs",
               "ToolTip": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\Vertex.cs",
               "RelativeToolTip": "TEST_GRAPH\\Vertex.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAuwAYAAAAhAAAA",
+              "ViewState": "AQIAAA0AAAAAAAAAAAAkwBwAAAABAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-09-12T16:19:50.718Z"
+              "WhenOpened": "2024-09-12T16:19:50.718Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 4,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\Program.cs",
               "RelativeDocumentMoniker": "TEST_GRAPH\\Program.cs",
@@ -103,32 +84,21 @@
               "RelativeToolTip": "TEST_GRAPH\\Program.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-09-12T16:19:49.595Z"
+              "WhenOpened": "2024-09-12T16:19:49.595Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "Edge.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\Edge.cs",
               "RelativeDocumentMoniker": "TEST_GRAPH\\Edge.cs",
               "ToolTip": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\Edge.cs",
               "RelativeToolTip": "TEST_GRAPH\\Edge.cs",
-              "ViewState": "AQIAAEEAAAAAAAAAAAAIwF8AAAAAAAAA",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAFIAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-09-12T09:47:52.736Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Form1.cs [Design]",
-              "DocumentMoniker": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\Form1.cs",
-              "RelativeDocumentMoniker": "TEST_GRAPH\\Form1.cs",
-              "ToolTip": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\Form1.cs [Design]*",
-              "RelativeToolTip": "TEST_GRAPH\\Form1.cs [Design]*",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-09-06T12:01:28.781Z",
-              "EditorCaption": " [Design]"
             },
             {
               "$type": "Document",
@@ -136,9 +106,9 @@
               "Title": "Form1.cs",
               "DocumentMoniker": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\Form1.cs",
               "RelativeDocumentMoniker": "TEST_GRAPH\\Form1.cs",
-              "ToolTip": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\Form1.cs*",
-              "RelativeToolTip": "TEST_GRAPH\\Form1.cs*",
-              "ViewState": "AQIAABcBAAAAAAAAAAAIwDgBAAAAAAAA",
+              "ToolTip": "C:\\Users\\Admin\\source\\repos\\TEST_GRAPH\\Graphs_Kolchygina\\TEST_GRAPH\\Form1.cs",
+              "RelativeToolTip": "TEST_GRAPH\\Form1.cs",
+              "ViewState": "AQIAANQAAAAAAAAAAAAuwOAAAAANAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-09-06T11:58:24.424Z",
               "EditorCaption": ""
