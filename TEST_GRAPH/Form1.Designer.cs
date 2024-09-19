@@ -31,6 +31,7 @@ namespace TEST_GRAPH
         {
             panelGraph = new DoubleBufferedPanel();
             dgvIncidenceMatrix = new DataGridView();
+            richTextBox1 = new RichTextBox();
             ((System.ComponentModel.ISupportInitialize)dgvIncidenceMatrix).BeginInit();
             SuspendLayout();
             // 
@@ -53,11 +54,21 @@ namespace TEST_GRAPH
             dgvIncidenceMatrix.Size = new Size(238, 519);
             dgvIncidenceMatrix.TabIndex = 1;
             // 
+            // richTextBox1
+            // 
+            richTextBox1.Dock = DockStyle.Bottom;
+            richTextBox1.Location = new Point(859, 19);
+            richTextBox1.Name = "richTextBox1";
+            richTextBox1.Size = new Size(238, 500);
+            richTextBox1.TabIndex = 2;
+            richTextBox1.Text = "";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1097, 519);
+            Controls.Add(richTextBox1);
             Controls.Add(dgvIncidenceMatrix);
             Controls.Add(panelGraph);
             Name = "Form1";
@@ -68,6 +79,7 @@ namespace TEST_GRAPH
             ResumeLayout(false);
         }
 
+
         private void Form1_Load(object sender, EventArgs e)
         {
 
@@ -77,5 +89,6 @@ namespace TEST_GRAPH
 
         private DoubleBufferedPanel panelGraph;
         private DataGridView dgvIncidenceMatrix;
+        private RichTextBox richTextBox1;
     }
 }
