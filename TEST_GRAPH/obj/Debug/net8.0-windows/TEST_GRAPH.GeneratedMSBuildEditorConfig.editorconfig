@@ -14,6 +14,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = TEST_GRAPH
-build_property.ProjectDir = C:\Users\Admin\source\repos\TEST_GRAPH\Graphs_Kolchygina\TEST_GRAPH\
+build_property.ProjectDir = C:\Users\Admin\source\repos\Graph_3\Graphs_Kolchygina\TEST_GRAPH\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

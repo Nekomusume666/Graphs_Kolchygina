@@ -6,6 +6,7 @@ namespace TEST_GRAPH
     using System.Windows.Forms;
     using Microsoft.VisualBasic;
     using System.Drawing.Drawing2D;
+    using System.Net.Sockets;
 
     public partial class Form1 : Form
     {
@@ -13,10 +14,13 @@ namespace TEST_GRAPH
         private List<Edge> edges = new List<Edge>();
         private Vertex selectedVertex = null;
         private bool firstClick = true;
-        private int vertexCounter = 1; 
+        private int vertexCounter = 1;
         private Vertex previousSelectedVertex = null;
         private List<Edge> highlightedEdges = new List<Edge>();
 
+        private List<Packet> packets; // Коллекция всех пакетов
+        private Random random = new Random();
+        private Timer moveTimer;
 
         private void RunTestData()
         {
@@ -61,7 +65,166 @@ namespace TEST_GRAPH
             panelGraph.MouseMove += PanelGraph_MouseMove;
             panelGraph.Paint += PanelGraph_Paint;
             InitContextMenu();
+
+
+            packets = new List<Packet>(); // Инициализация списка пакетов
+            InitMoveTimer();
         }
+
+        private void InitMoveTimer()
+        {
+            moveTimer = new Timer();
+            moveTimer.Interval = 20;
+            moveTimer.Tick += MoveTimer_Tick;
+            moveTimer.Start();
+        }
+
+        public void CreatePacket(Vertex startVertex, Vertex targetVertex, Func<Packet, Vertex> routingStrategy, string routeString, RichTextBox textBox)
+        {
+            Packet newPacket = new Packet(startVertex, targetVertex, routingStrategy, routeString, textBox);
+            packets.Add(newPacket); // Добавляем пакет в список активных пакетов
+        }
+
+
+        private void MoveTimer_Tick(object sender, EventArgs e)
+        {
+            // Новый список для активных пакетов
+            List<Packet> remainingPackets = new List<Packet>();
+
+            // Копии пакетов, которые нужно будет добавить в основной список
+            List<Packet> newPackets = new List<Packet>();
+
+            foreach (var packet in packets)
+            {
+                packet.Route(); // Выбор следующей вершины для маршрута
+
+
+                    if (packet.IsMoving)
+                    {
+                        bool reachedTargetOrDied = packet.MoveTowardsTarget(); // Пакет движется
+
+                        // Если пакет достиг цели или "умер", он не добавляется в новый список
+                        if (!reachedTargetOrDied)
+                        {
+                            remainingPackets.Add(packet); // Пакет еще в пути
+                        }
+                    }
+                    else
+                    {
+                        // Если пакет не двигается, проверяем, достиг ли он целевой вершины
+                        if (packet.CurrentVertex != packet.TargetVertex)
+                        {
+                            remainingPackets.Add(packet); // Если не достиг, оставляем в списке
+                        }
+                    }
+
+                if (packet.routingType == "Лавинная маршрутизация" && !packet.IsMoving)
+                {
+                    // Создаем новые пакеты для лавинной маршрутизации
+                    List<Packet> avalanchePackets = AvalancheRouting(packet);
+
+                    // Логгируем создание новых пакетов
+                    packet.Log($"Родительский пакет {packet.Id} создал {avalanchePackets.Count} дочерних пакетов.");
+
+                    // Убиваем родительский пакет после создания дочерних пакетов
+                    packet.Kill();
+
+                    // Добавляем новые пакеты в список
+                    newPackets.AddRange(avalanchePackets);
+
+                    remainingPackets.Remove(packet);
+                }
+
+
+            }
+
+            // Добавляем новые пакеты в основной список
+            remainingPackets.AddRange(newPackets);
+
+            // Обновляем список пакетов
+            packets = remainingPackets;
+
+            // Перерисовка панели для обновления позиций пакетов
+            panelGraph.Invalidate();
+        }
+
+        public Vertex RandomRouting(Packet packet)
+        {
+            List<Edge> availableEdges = edges.Where(edge => edge.Start == packet.CurrentVertex).ToList();
+            if (availableEdges.Count > 0)
+            {
+                Edge randomEdge = availableEdges[random.Next(availableEdges.Count)];
+                return randomEdge.End;
+            }
+            return null; // Пакет застрял, если нет исходящих рёбер
+        }
+        public List<Packet> AvalancheRouting(Packet originalPacket)
+        {
+            List<Packet> newPackets = new List<Packet>();
+
+            // Получаем всех соседних вершин, кроме той, откуда пришел пакет
+            List<Vertex> neighbors = originalPacket.CurrentVertex.Neighbors
+                                                 .Where(v => v != originalPacket.PreviousVertex)
+                                                 .ToList();
+
+            if (neighbors.Count == 0)
+            {
+                originalPacket.Log($"Packet {originalPacket.Id} ({originalPacket.routingType}) не нашел соседей для лавинной маршрутизации.");
+            }
+
+            // Для каждого соседа создаем новый пакет
+            foreach (Vertex neighbor in neighbors)
+            {
+                // Создаем новый пакет-копию, который движется в каждую соседнюю вершину
+                Packet newPacket = new Packet(
+                    originalPacket.CurrentVertex,        // Стартовая вершина
+                    originalPacket.FinalTargetVertex,    // Конечная цель (не меняется)
+                    AvalancheRoutingStrategy,            // Стратегия маршрутизации
+                    "Лавинная маршрутизация",            // Тип маршрутизации
+                    richTextBox1                         // Для логирования
+                );
+
+                newPacket.PreviousVertex = originalPacket.CurrentVertex; // Текущая вершина станет предыдущей для нового пакета
+                newPacket.TargetVertex = neighbor; // Цель - соседняя вершина
+                newPacket.IsMoving = true;         // Новый пакет сразу начинает движение
+
+                // Логгируем создание нового пакета
+                newPacket.Log($"Новый пакет {newPacket.Id} ({newPacket.routingType}) создан для вершины {neighbor.Id}.");
+
+                newPackets.Add(newPacket); // Добавляем новый пакет в список новых пакетов
+            }
+
+            return newPackets; // Возвращаем список новых пакетов
+        }
+
+
+        public Vertex AvalancheRoutingStrategy(Packet packet)
+        {
+            // Выбираем всех соседей, кроме той вершины, откуда пришел пакет
+            List<Vertex> neighbors = packet.CurrentVertex.Neighbors
+                                            .Where(v => v != packet.PreviousVertex)
+                                            .ToList();
+
+            // Для лавинной маршрутизации - возвращаем первого доступного соседа
+            if (neighbors.Count > 0)
+            {
+                Vertex newVertex = neighbors.First(); // Берем первого доступного соседа
+                return newVertex; // Возвращаем нового соседа
+            }
+            else
+            {
+                return null; // Если нет доступных соседей
+            }
+        }
+
+
+
+
+
+
+
+        ///////////////////////////////////////////////////////////////////////////////////////////
+
 
         private void DgvIncidenceMatrix_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
@@ -88,6 +251,7 @@ namespace TEST_GRAPH
                     else
                     {
                         edges.Add(new Edge(vertexRow, vertexCol, newWeight));
+                        vertexRow.AddNeighbor(vertexCol);
                     }
 
                     //dgvIncidenceMatrix.Rows[e.ColumnIndex].Cells[e.RowIndex].Value = newWeight;
@@ -153,7 +317,7 @@ namespace TEST_GRAPH
             contextMenu.Items.Add("Найти кратчайший путь (Дейкстра)", null, (s, e) => FindShortestPath());
             contextMenu.Items.Add("Найти кратчайший путь (Флойд)", null, (s, e) => FindShortestPathFloyd());
             contextMenu.Items.Add("Сравнить время выполнения (Дейкстра и Флойд)", null, (s, e) => CompareAlgorithms());
-            contextMenu.Items.Add("Сгенерировать граф", null, (s,e) => RunTestData());
+            contextMenu.Items.Add("Сгенерировать граф", null, (s, e) => RunTestData());
 
             panelGraph.ContextMenuStrip = contextMenu;
         }
@@ -174,7 +338,7 @@ namespace TEST_GRAPH
         {
             previousSelectedVertex = null;
             selectedVertex = null;
-            panelGraph.Invalidate(); 
+            panelGraph.Invalidate();
             UpdateIncidenceMatrix();
         }
 
@@ -362,9 +526,6 @@ namespace TEST_GRAPH
             }
         }
 
-
-
-
         // Пример вызова метода сброса в контекстном меню
         private void FindShortestPath()
         {
@@ -377,7 +538,7 @@ namespace TEST_GRAPH
             var startTime = DateTime.Now;
             var (distance, path) = Dijkstra(previousSelectedVertex, selectedVertex);
             var endTime = DateTime.Now;
-            
+
             if (distance == int.MaxValue)
             {
                 MessageBox.Show("Пути не существует.");
@@ -388,7 +549,7 @@ namespace TEST_GRAPH
                 MessageBox.Show($"Кратчайший путь (Дейкстры) от {previousSelectedVertex.Id} до {selectedVertex.Id}: {pathStr}" +
                     $"\nДлина пути: {distance}\nВремя выполнения: {endTime - startTime}");
 
-                highlightedEdges.Clear(); 
+                highlightedEdges.Clear();
                 for (int i = 0; i < path.Count - 1; i++)
                 {
                     var startVertex = path[i];
@@ -401,7 +562,7 @@ namespace TEST_GRAPH
                     }
                 }
 
-                panelGraph.Invalidate(); 
+                panelGraph.Invalidate();
             }
 
             ResetSelectedVertices();
@@ -412,7 +573,7 @@ namespace TEST_GRAPH
         {
             var distances = new Dictionary<Vertex, int>();
             var previous = new Dictionary<Vertex, Vertex>();
-            var unvisited = new List<Vertex>(vertices); 
+            var unvisited = new List<Vertex>(vertices);
 
             foreach (var vertex in vertices)
             {
@@ -441,7 +602,7 @@ namespace TEST_GRAPH
                     if (edge.Start == current)
                     {
                         int alt = distances[current] + edge.Weight;
-                        if (alt < distances[edge.End]) 
+                        if (alt < distances[edge.End])
                         {
                             distances[edge.End] = alt;
                             previous[edge.End] = current;
@@ -485,22 +646,22 @@ namespace TEST_GRAPH
             {
                 highlightedEdges.Clear();
                 return;
-            } 
+            }
 
             foreach (var vertex in vertices)
             {
                 if (vertex.Contains(e.Location))
                 {
-                    if (firstClick) 
+                    if (firstClick)
                     {
                         previousSelectedVertex = null;
-                        selectedVertex = vertex;       
-                        firstClick = false;           
+                        selectedVertex = vertex;
+                        firstClick = false;
                     }
-                    else 
+                    else
                     {
                         previousSelectedVertex = selectedVertex;
-                        selectedVertex = vertex;                       
+                        selectedVertex = vertex;
                     }
                     panelGraph.Invalidate();
                     return;
@@ -548,6 +709,7 @@ namespace TEST_GRAPH
                 {
                     // Если дуги нет, добавляем новую дугу
                     edges.Add(new Edge(previousSelectedVertex, selectedVertex, weight));
+                    previousSelectedVertex.AddNeighbor(selectedVertex);
                 }
                 else
                 {
@@ -601,6 +763,12 @@ namespace TEST_GRAPH
                     vertex.Draw(g);
                 }
                 g.DrawString(vertex.Id, SystemFonts.DefaultFont, Brushes.Black, vertex.Position.X - 10, vertex.Position.Y - 10);
+            }
+
+            // Рисуем все пакеты
+            foreach (var packet in packets)
+            {
+                packet.Draw(g);
             }
         }
 
@@ -683,6 +851,44 @@ namespace TEST_GRAPH
             ResetSelectedVertices();
         }
 
+        private void panelGraph_Paint_1(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void btn_random_routing_Click(object sender, EventArgs e)
+        {
+            // Проверяем, что начальная и конечная вершины выбраны
+            if (previousSelectedVertex != null && selectedVertex != null)
+            {
+                // Создаем пакет с начальной вершиной и стратегией случайной маршрутизации
+                CreatePacket(previousSelectedVertex, selectedVertex, RandomRouting, "Случайная маршрутизация", richTextBox1);
+            }
+            else
+            {
+                MessageBox.Show("Пожалуйста, выберите начальную и конечную вершины.");
+            }
+        }
+
+        private void btn_avalanche_routing_Click(object sender, EventArgs e)
+        {
+            // Проверяем, что начальная и конечная вершины выбраны
+            if (previousSelectedVertex != null && selectedVertex != null)
+            {
+                // Создаем пакет с начальной вершиной и стратегией лавинной маршрутизации
+                Packet startPacket = new Packet(previousSelectedVertex, selectedVertex, AvalancheRoutingStrategy, "Лавинная маршрутизация", richTextBox1);
+
+                // Добавляем начальный пакет в список
+                packets.Add(startPacket);
+
+                // Логируем создание первого пакета
+                richTextBox1.AppendText($"Создан пакет {startPacket.Id} с типом Лавинная маршрутизация\n");
+            }
+            else
+            {
+                MessageBox.Show("Пожалуйста, выберите начальную и конечную вершины.");
+            }
+        }
 
     }
 }
